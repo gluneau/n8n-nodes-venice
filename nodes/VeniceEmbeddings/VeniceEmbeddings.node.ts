@@ -20,7 +20,8 @@ export class VeniceEmbeddings implements INodeType {
 		icon: 'file:veniceEmbeddings.svg',
 		group: ['transform'],
 		version: 1,
-		description: 'Generate vector embeddings from text with Venice.ai (Beta feature, limited access)',
+		description:
+			'Generate vector embeddings from text with Venice.ai (Beta feature, limited access)',
 		defaults: {
 			name: 'Venice Embeddings',
 		},
@@ -53,7 +54,8 @@ export class VeniceEmbeddings implements INodeType {
 				displayName: 'BETA FEATURE - Limited Access',
 				name: 'betaNotice',
 				type: 'notice',
-				default: 'The Venice Embeddings API is currently in BETA and only available to Venice beta testers. If you encounter authentication errors, you need to contact Venice to request beta access.',
+				default:
+					'The Venice Embeddings API is currently in BETA and only available to Venice beta testers. If you encounter authentication errors, you need to contact Venice to request beta access.',
 				description: 'This feature requires special beta access permissions',
 			},
 			// Input type selection
@@ -230,27 +232,30 @@ export class VeniceEmbeddings implements INodeType {
 				returnData.push(...executionData);
 			} catch (error: any) {
 				// Check if this is an authentication error (beta access issue)
-				if (error.message.includes('401') || error.message.toLowerCase().includes('unauthorized') || 
-				    (error.response && error.response.status === 401)) {
+				if (
+					error.message.includes('401') ||
+					error.message.toLowerCase().includes('unauthorized') ||
+					(error.response && error.response.status === 401)
+				) {
 					const betaAccessError = new NodeOperationError(
 						this.getNode(),
 						'Venice Embeddings is a BETA feature and requires special access. Please contact Venice to request beta access for embeddings.',
-						{ itemIndex: i }
+						{ itemIndex: i },
 					);
 					if (this.continueOnFail()) {
-						returnData.push({ 
-							json: { 
+						returnData.push({
+							json: {
 								error: betaAccessError.message,
 								details: 'You need beta tester access to use embeddings.',
 								statusCode: 401,
-								isBetaFeature: true
-							} 
+								isBetaFeature: true,
+							},
 						});
 						continue;
 					}
 					throw betaAccessError;
 				}
-				
+
 				// Handle other errors
 				if (this.continueOnFail()) {
 					returnData.push({ json: { error: error.message } });

@@ -439,12 +439,12 @@ export class VeniceChatModel implements INodeType {
 
 				// Get credentials (will be used automatically by httpRequestWithAuthentication)
 				await this.getCredentials('veniceApi');
-				
+
 				// Add some additional debugging
 				const requestUrl = '/chat/completions';
 				console.log(`Making request to: ${requestUrl}`);
 				console.log('Request body:', JSON.stringify(body));
-				
+
 				// Make API request with full error handling
 				let response;
 				try {
@@ -454,20 +454,18 @@ export class VeniceChatModel implements INodeType {
 						body,
 						json: true,
 					});
-					
+
 					// Process and return data
 					const executionData = this.helpers.constructExecutionMetaData(
 						this.helpers.returnJsonArray(response),
 						{ itemData: { item: i } },
 					);
-	
+
 					returnData.push(...executionData);
 				} catch (error) {
-					throw new NodeOperationError(
-						this.getNode(),
-						`Request failed: ${error.message}`,
-						{ itemIndex: i }
-					);
+					throw new NodeOperationError(this.getNode(), `Request failed: ${error.message}`, {
+						itemIndex: i,
+					});
 				}
 			} catch (error: any) {
 				if (this.continueOnFail()) {
