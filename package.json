@@ -37,8 +37,7 @@
     "test:chat": "npm run build && node test/VeniceChatModel.test.js",
     "test:image": "npm run build && node test/VeniceImageGeneration.test.js",
     "test:embeddings": "npm run build && node test/VeniceEmbeddings.test.js",
-    "test:speech": "npm run build && node test/VeniceTextToSpeech.test.js",
-    "test:real": "npm run build && node test/run-tests.js"
+    "test:speech": "npm run build && node test/VeniceTextToSpeech.test.js"
   },
   "files": [
     "dist"
@@ -52,8 +51,8 @@
       "dist/nodes/VeniceAi/VeniceAi.node.js",
       "dist/nodes/VeniceChatModel/VeniceChatModel.node.js",
       "dist/nodes/VeniceTextToSpeech/VeniceTextToSpeech.node.js",
-      "dist/nodes/VeniceEmbeddings/VeniceEmbeddings.node.js",
-      "dist/nodes/VeniceImageGeneration/VeniceImageGeneration.node.js"
+      "dist/nodes/VeniceImageGeneration/VeniceImageGeneration.node.js",
+      "dist/nodes/VeniceEmbeddings/VeniceEmbeddings.node.js"
     ]
   },
   "devDependencies": {

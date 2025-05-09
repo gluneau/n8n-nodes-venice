@@ -1,4 +1,4 @@
-// Test runner for the Venice nodes with real API calls
+// Test runner for the Venice nodes  calls
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
@@ -12,7 +12,7 @@ if (!process.env.VENICE_API_KEY) {
 }
 
 async function runTests() {
-  console.log('Starting Venice nodes tests with REAL API...');
+  console.log('Starting Venice nodes tests ...');
   
   // First, ensure we have a build
   if (!fs.existsSync(path.join(__dirname, '../dist'))) {
@@ -22,27 +22,26 @@ async function runTests() {
   
   // Run the VeniceChatModel test
   try {
-    console.log('\n--- Testing VeniceChatModel with real API ---');
+    console.log('\n--- Testing VeniceChatModel ---');
     require('./VeniceChatModel.test');
     
     // Wait 5 seconds between tests to avoid rate limiting
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    console.log('\n--- Testing VeniceImageGeneration with real API ---');
+    console.log('\n--- Testing VeniceImageGeneration ---');
     require('./VeniceImageGeneration.test');
     
     // Wait 5 seconds between tests
     await new Promise(resolve => setTimeout(resolve, 5000));
     
-    console.log('\n--- Testing VeniceEmbeddings with real API ---');
-    require('./VeniceEmbeddings.test');
-    
-    // Wait 5 seconds between tests
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    console.log('\n--- Testing VeniceTextToSpeech with real API ---');
+    console.log('\n--- Testing VeniceTextToSpeech ---');
     require('./VeniceTextToSpeech.test');
+
+    // Wait 5 seconds between tests
+    // await new Promise(resolve => setTimeout(resolve, 5000));
     
+    // console.log('\n--- Testing VeniceEmbeddings ---');
+    // require('./VeniceEmbeddings.test');
   } catch (error) {
     console.error('Test execution failed:', error);
     process.exit(1);

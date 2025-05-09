@@ -4,10 +4,16 @@ require('dotenv').config();
 const { VeniceEmbeddings } = require('../dist/nodes/VeniceEmbeddings/VeniceEmbeddings.node');
 const axios = require('axios');
 
-// Check if API key is available
+// Check if API key is available and has reasonable length
 if (!process.env.VENICE_API_KEY) {
   console.error('Error: VENICE_API_KEY is not set in .env file');
   process.exit(1);
+}
+
+// Check the API key length (without revealing the actual key)
+console.log(`API Key length: ${process.env.VENICE_API_KEY.length} characters`);
+if (process.env.VENICE_API_KEY.length < 30) {
+  console.warn('Warning: API key seems too short. Venice API keys are typically longer.');
 }
 
 // Create a real HTTP request function that uses axios
@@ -15,14 +21,21 @@ async function makeRealApiRequest(options) {
   console.log(`Making real API request to: ${options.url}`);
   console.log('Request body:', JSON.stringify(options.body, null, 2));
   
+  const authHeader = `Bearer ${process.env.VENICE_API_KEY}`;
+  console.log(`Authorization header length: ${authHeader.length} characters`);
+  
+  // Construct the full URL
+  const fullUrl = `https://api.venice.ai/api/v1${options.url}`;
+  console.log(`Full URL: ${fullUrl}`);
+  
   try {
     const response = await axios({
       method: options.method,
-      url: `https://api.venice.ai/api/v1${options.url}`,
+      url: fullUrl,
       data: options.body,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.VENICE_API_KEY}`
+        'Authorization': authHeader
       }
     });
     
