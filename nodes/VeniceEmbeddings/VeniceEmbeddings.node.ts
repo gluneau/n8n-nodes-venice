@@ -23,6 +23,12 @@ export class VeniceEmbeddings implements INodeType {
 		defaults: {
 			name: 'Venice Embeddings',
 		},
+		codex: {
+			categories: ['AI'],
+			subcategories: {
+				AI: ['Embeddings'],
+			},
+		},
 		inputs: ['main'],
 		outputs: ['main'],
 		credentials: [

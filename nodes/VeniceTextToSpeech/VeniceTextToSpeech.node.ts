@@ -22,6 +22,13 @@ export class VeniceTextToSpeech implements INodeType {
 		defaults: {
 			name: 'Venice Text to Speech',
 		},
+		codex: {
+			categories: ['AI'],
+			subcategories: {
+				AI: ['Audio'],
+				Audio: ['Text-to-Speech'],
+			},
+		},
 		inputs: ['main'],
 		outputs: ['main'],
 		credentials: [

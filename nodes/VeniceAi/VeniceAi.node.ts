@@ -22,6 +22,13 @@ export class VeniceAi implements INodeType {
 		defaults: {
 			name: 'Venice AI',
 		},
+		codex: {
+			categories: ['AI'],
+			subcategories: {
+				AI: ['Language Models', 'Root Nodes'],
+				'Language Models': ['Chat Models (Recommended)'],
+			},
+		},
 		inputs: ['main'],
 		outputs: ['main'],
 		credentials: [

@@ -22,6 +22,12 @@ export class VeniceImageGeneration implements INodeType {
 		defaults: {
 			name: 'Venice Image',
 		},
+		codex: {
+			categories: ['AI'],
+			subcategories: {
+				AI: ['Image Generation'],
+			},
+		},
 		inputs: ['main'],
 		outputs: ['main'],
 		credentials: [

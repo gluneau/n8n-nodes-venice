@@ -23,6 +23,13 @@ export class VeniceChatModel implements INodeType {
 		defaults: {
 			name: 'Venice Chat',
 		},
+		codex: {
+			categories: ['AI'],
+			subcategories: {
+				AI: ['Language Models'],
+				'Language Models': ['Chat Models (Recommended)'],
+			},
+		},
 		inputs: ['main'],
 		outputs: ['main'],
 		credentials: [
