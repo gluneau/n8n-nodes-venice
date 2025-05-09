@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Venice.ai integration for n8n",
   "keywords": [
     "n8n-community-node-package",
@@ -32,7 +32,13 @@
     "format": "prettier --write \"nodes/**/*.ts\" \"credentials/**/*.ts\"",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json",
+    "test": "npm run build && node test/run-tests.js",
+    "test:chat": "npm run build && node test/VeniceChatModel.test.js",
+    "test:image": "npm run build && node test/VeniceImageGeneration.test.js",
+    "test:embeddings": "npm run build && node test/VeniceEmbeddings.test.js",
+    "test:speech": "npm run build && node test/VeniceTextToSpeech.test.js",
+    "test:real": "npm run build && node test/run-tests.js"
   },
   "files": [
     "dist"
@@ -54,6 +60,8 @@
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.17",
     "@typescript-eslint/parser": "^8.32.0",
+    "axios": "^1.9.0",
+    "dotenv": "^16.5.0",
     "eslint": "^8.57.1",
     "eslint-plugin-n8n-nodes-base": "^1.16.1",
     "gulp": "^5.0.0",

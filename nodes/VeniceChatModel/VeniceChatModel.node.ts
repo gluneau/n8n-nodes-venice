@@ -437,21 +437,38 @@ export class VeniceChatModel implements INodeType {
 					}
 				});
 
-				// Make API request
-				const response = await this.helpers.httpRequestWithAuthentication.call(this, 'veniceApi', {
-					method: 'POST',
-					url: '/chat/completions',
-					body,
-					json: true,
-				});
-
-				// Process and return data
-				const executionData = this.helpers.constructExecutionMetaData(
-					this.helpers.returnJsonArray(response),
-					{ itemData: { item: i } },
-				);
-
-				returnData.push(...executionData);
+				// Get credentials (will be used automatically by httpRequestWithAuthentication)
+				await this.getCredentials('veniceApi');
+				
+				// Add some additional debugging
+				const requestUrl = '/chat/completions';
+				console.log(`Making request to: ${requestUrl}`);
+				console.log('Request body:', JSON.stringify(body));
+				
+				// Make API request with full error handling
+				let response;
+				try {
+					response = await this.helpers.httpRequestWithAuthentication.call(this, 'veniceApi', {
+						method: 'POST',
+						url: requestUrl,
+						body,
+						json: true,
+					});
+					
+					// Process and return data
+					const executionData = this.helpers.constructExecutionMetaData(
+						this.helpers.returnJsonArray(response),
+						{ itemData: { item: i } },
+					);
+	
+					returnData.push(...executionData);
+				} catch (error) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`Request failed: ${error.message}`,
+						{ itemIndex: i }
+					);
+				}
 			} catch (error: any) {
 				if (this.continueOnFail()) {
 					returnData.push({ json: { error: error.message } });
