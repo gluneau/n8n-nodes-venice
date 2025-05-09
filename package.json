@@ -1,5 +1,8 @@
 {
   "name": "@gluneau/n8n-nodes-venice",
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "0.1.0",
   "description": "Venice.ai integration for n8n",
   "keywords": [
