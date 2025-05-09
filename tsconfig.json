@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "lib": ["es2023"],
+    "module": "commonjs",
+    "outDir": "./dist",
+    "target": "es2022",
+    "moduleResolution": "node",
+    "strict": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+		"removeComments": true,
+		"useUnknownInCatchVariables": false,
+		"forceConsistentCasingInFileNames": true,
+		"noImplicitAny": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"strictNullChecks": true,
+		"preserveConstEnums": true,
+		"resolveJsonModule": true,
+		"incremental": true
+	},
+	"include": [
+		"credentials/**/*",
+		"nodes/**/*",
+		"nodes/**/*.json",
+		"package.json",
+	],
+}

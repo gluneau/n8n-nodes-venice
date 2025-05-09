@@ -1,0 +1,68 @@
+{
+  "name": "@gluneau/n8n-nodes-venice",
+  "version": "0.1.0",
+  "description": "Venice.ai integration for n8n",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "venice",
+    "venice.ai",
+    "ai",
+    "llm",
+    "text generation",
+    "image generation"
+  ],
+  "license": "MIT",
+  "homepage": "https://n8n.io",
+  "author": {
+    "name": "Gregory Luneau",
+    "email": "gregory.luneau@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gluneau/n8n-nodes-venice.git"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "format": "prettier --write \"nodes/**/*.ts\" \"credentials/**/*.ts\"",
+    "lint": "eslint nodes credentials package.json",
+    "lintfix": "eslint nodes credentials package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/VeniceApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/VeniceAi/VeniceAi.node.js",
+      "dist/nodes/VeniceChatModel/VeniceChatModel.node.js",
+      "dist/nodes/VeniceTextToSpeech/VeniceTextToSpeech.node.js",
+      "dist/nodes/VeniceEmbeddings/VeniceEmbeddings.node.js",
+      "dist/nodes/VeniceImageGeneration/VeniceImageGeneration.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.17",
+    "@typescript-eslint/parser": "^8.32.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-n8n-nodes-base": "^1.16.1",
+    "gulp": "^5.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "n8n-core": "^1.91.0",
+    "n8n-workflow": "^1.90.0"
+  },
+  "engines": {
+    "node": ">=18.12.1"
+  }
+}
