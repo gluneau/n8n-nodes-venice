@@ -1,14 +1,19 @@
+/* eslint-disable n8n-nodes-base/node-dirname-against-convention */
 import {
-	IDataObject,
-	IExecuteFunctions,
-	INodeExecutionData,
-	INodeType,
-	INodeTypeDescription,
-	NodeOperationError,
+	NodeConnectionTypes,
+	type INodeType,
+	type INodeTypeDescription,
+	type ISupplyDataFunctions,
+	type SupplyData,
 } from 'n8n-workflow';
 
+import { getConnectionHintNoticeField } from '../helpers/utils';
+import { ChatVenice } from './VeniceChatModel';
+import { makeN8nLlmFailedAttemptHandler } from '../n8nLlmFailedAttemptHandler';
+import { N8nLlmTracing } from '../N8nLlmTracing';
+
 /**
- * Venice Chat Model sub-node implementation
+ * Venice Chat Model node implementation
  * This node allows creating completions via Venice.ai's chat API
  */
 export class VeniceChatModel implements INodeType {
@@ -26,20 +31,21 @@ export class VeniceChatModel implements INodeType {
 		codex: {
 			categories: ['AI'],
 			subcategories: {
-				AI: ['Language Models'],
+				AI: ['Language Models', 'Root Nodes'],
 				'Language Models': ['Chat Models (Recommended)'],
 			},
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
+		inputs: [],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
+		outputs: [NodeConnectionTypes.AiLanguageModel],
+		outputNames: ['Model'],
 		credentials: [
 			{
 				name: 'veniceApi',
 				required: true,
 			},
 		],
-		// Mark this as a sub-node that can be used with the Venice AI root node
-		subtitle: 'Venice',
 		requestDefaults: {
 			baseURL: 'https://api.venice.ai/api/v1',
 			headers: {
@@ -48,6 +54,7 @@ export class VeniceChatModel implements INodeType {
 			},
 		},
 		properties: [
+			getConnectionHintNoticeField([NodeConnectionTypes.AiChain, NodeConnectionTypes.AiAgent]),
 			// Model selection
 			{
 				displayName: 'Model',
@@ -56,58 +63,6 @@ export class VeniceChatModel implements INodeType {
 				default: 'llama-3.3-70b', // Default model from Venice API
 				description: 'The model to use for chat completion',
 				required: true,
-			},
-			// Messages collection
-			{
-				displayName: 'Messages',
-				name: 'messages',
-				type: 'fixedCollection',
-				typeOptions: {
-					multipleValues: true,
-					sortable: true,
-				},
-				default: {},
-				placeholder: 'Add Message',
-				options: [
-					{
-						name: 'messagesValues',
-						displayName: 'Message',
-						values: [
-							{
-								displayName: 'Role',
-								name: 'role',
-								type: 'options',
-								options: [
-									{
-										name: 'System',
-										value: 'system',
-									},
-									{
-										name: 'User',
-										value: 'user',
-									},
-									{
-										name: 'Assistant',
-										value: 'assistant',
-									},
-								],
-								default: 'user',
-								description: 'The role of the message author',
-							},
-							{
-								displayName: 'Content',
-								name: 'content',
-								type: 'string',
-								typeOptions: {
-									rows: 4,
-								},
-								default: '',
-								description: 'The content of the message',
-							},
-						],
-					},
-				],
-				description: 'The messages to send with the request',
 			},
 			// Optional parameters
 			{
@@ -119,7 +74,7 @@ export class VeniceChatModel implements INodeType {
 				options: [
 					{
 						displayName: 'Frequency Penalty',
-						name: 'frequency_penalty',
+						name: 'frequencyPenalty',
 						type: 'number',
 						typeOptions: {
 							minValue: -2,
@@ -129,23 +84,15 @@ export class VeniceChatModel implements INodeType {
 						description: 'How much to penalize new tokens based on their existing frequency',
 					},
 					{
-						displayName: 'Maximum Completion Tokens',
-						name: 'max_completion_tokens',
+						displayName: 'Maximum Number of Tokens',
+						name: 'maxTokens',
 						type: 'number',
 						default: 1024,
 						description: 'Maximum number of tokens to generate',
 					},
 					{
-						displayName: 'Maximum Tokens (Legacy)',
-						name: 'max_tokens',
-						type: 'number',
-						default: 1024,
-						description:
-							'DEPRECATED: Maximum number of tokens to generate. Use max_completion_tokens instead.',
-					},
-					{
 						displayName: 'Maximum Temperature',
-						name: 'max_temp',
+						name: 'maxTemp',
 						type: 'number',
 						typeOptions: {
 							minValue: 0,
@@ -156,7 +103,7 @@ export class VeniceChatModel implements INodeType {
 					},
 					{
 						displayName: 'Minimum P',
-						name: 'min_p',
+						name: 'minP',
 						type: 'number',
 						typeOptions: {
 							minValue: 0,
@@ -167,7 +114,7 @@ export class VeniceChatModel implements INodeType {
 					},
 					{
 						displayName: 'Minimum Temperature',
-						name: 'min_temp',
+						name: 'minTemp',
 						type: 'number',
 						typeOptions: {
 							minValue: 0,
@@ -185,7 +132,7 @@ export class VeniceChatModel implements INodeType {
 					},
 					{
 						displayName: 'Presence Penalty',
-						name: 'presence_penalty',
+						name: 'presencePenalty',
 						type: 'number',
 						typeOptions: {
 							minValue: -2,
@@ -196,7 +143,7 @@ export class VeniceChatModel implements INodeType {
 					},
 					{
 						displayName: 'Repetition Penalty',
-						name: 'repetition_penalty',
+						name: 'repetitionPenalty',
 						type: 'number',
 						typeOptions: {
 							minValue: 0,
@@ -220,13 +167,6 @@ export class VeniceChatModel implements INodeType {
 						description: 'Sequences where the API will stop generating further tokens',
 					},
 					{
-						displayName: 'Stream',
-						name: 'stream',
-						type: 'boolean',
-						default: false,
-						description: 'Whether to stream back partial progress',
-					},
-					{
 						displayName: 'Temperature',
 						name: 'temperature',
 						type: 'number',
@@ -239,14 +179,14 @@ export class VeniceChatModel implements INodeType {
 					},
 					{
 						displayName: 'Top K',
-						name: 'top_k',
+						name: 'topK',
 						type: 'number',
 						default: 40,
 						description: 'Number of highest probability tokens to keep for top-k filtering',
 					},
 					{
 						displayName: 'Top P',
-						name: 'top_p',
+						name: 'topP',
 						type: 'number',
 						typeOptions: {
 							minValue: 0,
@@ -265,14 +205,14 @@ export class VeniceChatModel implements INodeType {
 						options: [
 							{
 								displayName: 'Character Slug',
-								name: 'character_slug',
+								name: 'characterSlug',
 								type: 'string',
 								default: '',
 								description: 'The character slug of a public Venice character',
 							},
 							{
 								displayName: 'Enable Web Search',
-								name: 'enable_web_search',
+								name: 'enableWebSearch',
 								type: 'options',
 								options: [
 									{
@@ -293,7 +233,7 @@ export class VeniceChatModel implements INodeType {
 							},
 							{
 								displayName: 'Include Venice System Prompt',
-								name: 'include_venice_system_prompt',
+								name: 'includeVeniceSystemPrompt',
 								type: 'boolean',
 								default: true,
 								description:
@@ -323,7 +263,7 @@ export class VeniceChatModel implements INodeType {
 							},
 							{
 								displayName: 'JSON Schema',
-								name: 'json_schema',
+								name: 'jsonSchema',
 								type: 'json',
 								default:
 									'{\n  "type": "object",\n  "properties": {\n    "name": {\n      "type": "string"\n    }\n  }\n}',
@@ -341,141 +281,62 @@ export class VeniceChatModel implements INodeType {
 		],
 	};
 
-	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-		const items = this.getInputData();
-		const returnData: INodeExecutionData[] = [];
+	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {
+		const credentials = await this.getCredentials('veniceApi');
 
-		for (let i = 0; i < items.length; i++) {
-			try {
-				// Get main parameters
-				const model = this.getNodeParameter('model', i) as string;
-				const messagesValues = this.getNodeParameter(
-					'messages.messagesValues',
-					i,
-					[],
-				) as IDataObject[];
-				const options = this.getNodeParameter('options', i, {}) as IDataObject;
+		const modelName = this.getNodeParameter('model', itemIndex) as string;
+		const options = this.getNodeParameter('options', itemIndex, {}) as {
+			frequencyPenalty?: number;
+			maxTokens?: number;
+			maxTemp?: number;
+			minP?: number;
+			minTemp?: number;
+			n?: number;
+			presencePenalty?: number;
+			repetitionPenalty?: number;
+			seed?: number;
+			stop?: string;
+			temperature?: number;
+			topK?: number;
+			topP?: number;
+			veniceParameters?: {
+				characterSlug?: string;
+				enableWebSearch?: 'auto' | 'on' | 'off';
+				includeVeniceSystemPrompt?: boolean;
+			};
+			responseFormat?: {
+				type?: string;
+				jsonSchema?: string;
+			};
+		};
 
-				// Format messages
-				const messages = messagesValues.map((message) => ({
-					role: message.role as string,
-					content: message.content as string,
-				}));
+		// Create the model
+		const model = new ChatVenice({
+			apiKey: credentials.apiKey as string,
+			modelName,
+			temperature: options.temperature,
+			maxTokens: options.maxTokens,
+			topP: options.topP,
+			frequencyPenalty: options.frequencyPenalty,
+			presencePenalty: options.presencePenalty,
+			n: options.n,
+			stop: options.stop,
+			seed: options.seed,
+			// Venice-specific parameters
+			repetitionPenalty: options.repetitionPenalty,
+			topK: options.topK,
+			minP: options.minP,
+			maxTemp: options.maxTemp,
+			minTemp: options.minTemp,
+			veniceParameters: options.veniceParameters,
+			responseFormat: options.responseFormat,
+			// Add tracing and error handling
+			callbacks: [new N8nLlmTracing(this)],
+			onFailedAttempt: makeN8nLlmFailedAttemptHandler(this),
+		});
 
-				// Construct request body
-				const body: IDataObject = {
-					model,
-					messages,
-				};
-
-				// Handle options
-				Object.keys(options).forEach((key) => {
-					if (key === 'veniceParameters') {
-						// Handle Venice-specific parameters
-						const veniceParams = options.veniceParameters as IDataObject;
-						if (Object.keys(veniceParams).length > 0) {
-							body.venice_parameters = {};
-
-							if (veniceParams.character_slug) {
-								(body.venice_parameters as IDataObject).character_slug =
-									veniceParams.character_slug;
-							}
-
-							if (veniceParams.enable_web_search) {
-								(body.venice_parameters as IDataObject).enable_web_search =
-									veniceParams.enable_web_search;
-							}
-
-							if (veniceParams.include_venice_system_prompt !== undefined) {
-								(body.venice_parameters as IDataObject).include_venice_system_prompt =
-									veniceParams.include_venice_system_prompt;
-							}
-						}
-					} else if (key === 'responseFormat') {
-						// Handle response format
-						const responseFormat = options.responseFormat as IDataObject;
-						if (Object.keys(responseFormat).length > 0) {
-							body.response_format = {
-								type: responseFormat.type,
-							};
-
-							if (responseFormat.type === 'json_schema' && responseFormat.json_schema) {
-								try {
-									(body.response_format as IDataObject).json_schema = JSON.parse(
-										responseFormat.json_schema as string,
-									);
-								} catch (error: any) {
-									throw new NodeOperationError(
-										this.getNode(),
-										`Invalid JSON Schema: ${error.message}`,
-										{
-											itemIndex: i,
-										},
-									);
-								}
-							}
-						}
-					} else if (key === 'stop' && options.stop) {
-						// Handle stop sequences
-						try {
-							// Check if it's a JSON array
-							if (
-								(options.stop as string).trim().startsWith('[') &&
-								(options.stop as string).trim().endsWith(']')
-							) {
-								body.stop = JSON.parse(options.stop as string);
-							} else {
-								body.stop = options.stop;
-							}
-						} catch (error) {
-							// If parsing fails, use it as a string
-							body.stop = options.stop;
-						}
-					} else {
-						// Add all other options directly
-						body[key] = options[key];
-					}
-				});
-
-				// Get credentials (will be used automatically by httpRequestWithAuthentication)
-				await this.getCredentials('veniceApi');
-
-				// Add some additional debugging
-				const requestUrl = '/chat/completions';
-				console.log(`Making request to: ${requestUrl}`);
-				console.log('Request body:', JSON.stringify(body));
-
-				// Make API request with full error handling
-				let response;
-				try {
-					response = await this.helpers.httpRequestWithAuthentication.call(this, 'veniceApi', {
-						method: 'POST',
-						url: requestUrl,
-						body,
-						json: true,
-					});
-
-					// Process and return data
-					const executionData = this.helpers.constructExecutionMetaData(
-						this.helpers.returnJsonArray(response),
-						{ itemData: { item: i } },
-					);
-
-					returnData.push(...executionData);
-				} catch (error) {
-					throw new NodeOperationError(this.getNode(), `Request failed: ${error.message}`, {
-						itemIndex: i,
-					});
-				}
-			} catch (error: any) {
-				if (this.continueOnFail()) {
-					returnData.push({ json: { error: error.message } });
-					continue;
-				}
-				throw error;
-			}
-		}
-
-		return [returnData];
+		return {
+			response: model,
+		};
 	}
 }

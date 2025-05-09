@@ -53,9 +53,13 @@
       "dist/nodes/VeniceTextToSpeech/VeniceTextToSpeech.node.js",
       "dist/nodes/VeniceImageGeneration/VeniceImageGeneration.node.js",
       "dist/nodes/VeniceEmbeddings/VeniceEmbeddings.node.js"
+    ],
+    "aiLanguageModels": [
+      "dist/nodes/VeniceChatModel/VeniceChatModel.node.js"
     ]
   },
   "devDependencies": {
+    "@langchain/core": "^0.2.36",
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.17",
     "@typescript-eslint/parser": "^8.32.0",

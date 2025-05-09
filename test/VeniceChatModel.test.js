@@ -38,32 +38,32 @@ async function makeRealApiRequest(options) {
   }
 }
 
-// Mock the n8n workflow context
-const mockContext = {
-  getInputData: () => [{ json: {} }],
+// Mock the n8n workflow context for supplyData method
+const mockSupplyDataContext = {
   getNodeParameter: (param, itemIndex, fallback) => {
     if (param === 'model') return 'llama-3.3-70b';
-    if (param === 'messages.messagesValues') return [
-      { role: 'system', content: 'You are a helpful assistant.' },
-      { role: 'user', content: 'Hello, how are you?' }
-    ];
-    if (param === 'options') return {};
+    if (param === 'options') return {
+      temperature: 0.15,
+      maxTokens: 1024
+    };
     return fallback;
   },
   getCredentials: async () => ({
     apiKey: process.env.VENICE_API_KEY
   }),
-  helpers: {
-    // Use our real API request function instead of a mock
-    httpRequestWithAuthentication: async (auth, options) => {
-      return makeRealApiRequest(options);
-    },
-    returnJsonArray: (data) => [{ json: data }],
-    constructExecutionMetaData: (data) => data,
-  },
-  getNode: () => ({ name: 'Venice Chat Model Test' }),
-  continueOnFail: () => false,
 };
+
+// Additional mock for testing the model with actual input
+async function testModelWithInput(model) {
+  const testInput = [
+    { _getType: () => 'system', content: 'You are a helpful assistant.' },
+    { _getType: () => 'human', content: 'Tell me a short joke about programming.' }
+  ];
+  
+  console.log('Testing model with input...');
+  const result = await model._generate(testInput);
+  return result;
+}
 
 async function testVeniceChatModel() {
   console.log('Testing VeniceChatModel node with REAL API...');
@@ -72,13 +72,22 @@ async function testVeniceChatModel() {
   console.log('Node created:', node.description.displayName);
   
   try {
-    // Bind the execute method to our mock context
-    const result = await node.execute.call(mockContext);
-    console.log('Execution successful!');
-    console.log('Result:', JSON.stringify(result, null, 2));
+    // 1. Get the model using supplyData
+    mockSupplyDataContext.getNode = () => node;
+    Object.setPrototypeOf(mockSupplyDataContext, VeniceChatModel.prototype);
+    
+    console.log('Getting chat model using supplyData...');
+    const { response: model } = await node.supplyData.call(mockSupplyDataContext, 0);
+    console.log('Model obtained:', model._llmType());
+    
+    // 2. Test the model with some input
+    const result = await testModelWithInput(model);
+    console.log('Model test successful!');
+    console.log('Generated AI message:', result.generations[0].message.content);
+    
     return result;
   } catch (error) {
-    console.error('Execution failed:', error);
+    console.error('Test failed:', error);
     throw error;
   }
 }
